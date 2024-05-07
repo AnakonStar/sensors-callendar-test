@@ -1,6 +1,15 @@
 {
   "expo": {
     "name": "sensors-callendar-test",
+    "plugins": [
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow $(PRODUCT_NAME) to access your calendar"
+        }
+      ],
+      "expo-localization"
+    ],
     "slug": "sensors-callendar-test",
     "version": "1.0.0",
     "orientation": "portrait",
