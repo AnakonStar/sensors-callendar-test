@@ -1,38 +1,39 @@
-import * as Location from "expo-location";
-import { Pedometer } from "expo-sensors";
+import { Accelerometer } from "expo-sensors";
 import React, { useEffect, useState } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 export function PedometerScreen() {
-  const [isPedometerAvailable, setIsPedometerAvailable] =
-    useState<string>("checking");
-  const [currentStepCount, setCurrentStepCount] = useState<number>(0);
-
-  const subscribe = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status === "granted") {
-      const isAvailable = await Pedometer.isAvailableAsync();
-      setIsPedometerAvailable(String(isAvailable));
-
-      if (isAvailable) {
-        return Pedometer.watchStepCount((result) => {
-          setCurrentStepCount(result.steps || 0);
-        });
-      }
-    } else {
-      console.log("Permissão de localização negada");
-    }
-  };
+  const [passos, setPassos] = useState<number>(0);
 
   useEffect(() => {
-    subscribe();
+    const verificaPermissao = async () => {
+      const { status } = await Accelerometer.getPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permissão para acessar os sensores não concedida");
+      }
+    };
+
+    const contarPassos = async () => {
+      await verificaPermissao();
+      Accelerometer.setUpdateInterval(1000); // Define o intervalo de atualização para 1 segundo
+      Accelerometer.addListener(({ x, y, z }) => {
+        const magnitude = Math.sqrt(x * x + y * y + z * z);
+        if (magnitude > 1.1) {
+          setPassos((prevPassos) => prevPassos + 1);
+        }
+      });
+    };
+
+    contarPassos();
+
+    return () => {
+      Accelerometer.removeAllListeners();
+    };
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Text>Pedometer.isAvailableAsync(): {isPedometerAvailable}</Text>
-      <Text>Walk! And watch this go up: {currentStepCount}</Text>
-      <Button title="Request Location Permission" onPress={subscribe} />
+    <View>
+      <Text>Número de Passos: {passos}</Text>
     </View>
   );
 }
